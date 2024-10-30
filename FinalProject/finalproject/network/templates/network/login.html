@@ -1,0 +1,24 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+    <h2>Login</h2>
+
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group my-2">
+            <label style="color: white;">Username: </label>
+            <input autofocus class="form-control bg-dark" type="text" name="username" style="color: white;">
+        </div>
+        <div class="form-group my-2">
+            <label style="color: white;">Password: </label>
+            <input class="form-control bg-dark" type="password" name="password" style="color: white;">
+        </div>
+        <input class="btn btn-dark" type="submit" value="Login">
+    </form>
+
+    <div style="color: white;">
+        Don't have an account? <a style="color: white;" href="{% url 'register' %}">Register here.</a>
+    </div>
+
+{% endblock %}

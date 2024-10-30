@@ -1,0 +1,105 @@
+{% for post in posts_per_page %}
+<div id="post_view_{{ post.id }}" class="my-2">
+    {% if post.is_reply %}
+    <div class="card" style="max-width: 23rem; background-color: rgb(70, 70, 70);">
+        {% if post.reply_to %}
+        {% if post.reply_to.poster %}
+        {% if post.reply_to.poster.profile.alias %}
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=post.reply_to.poster.id %}">@ {{ post.reply_to.poster.profile.alias }}</a></div>
+        {% else %}
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=post.reply_to.poster.id %}">@ {{ post.reply_to.poster }}</a></div>
+        {% endif %}
+        {% else %}
+        <div style="color: rgb(214, 205, 205)">The user who posted this has left</div>
+        {% endif %}
+        <div style="color: aliceblue;">Re: {{ post.reply_to.content }}</div>
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'comment' post_id=post.reply_to.id %}">see original post</a></div>
+        {% else %}
+        <div style="color: rgb(214, 205, 205);">"The post replied to is deleted."</div>
+        {% endif %}    
+    </div>
+    {% endif %}    
+
+    <div class="card form-group" style="max-width: 23rem; background-color: rgb(46, 45, 45);">
+        <div class="card-body" style="color: rgb(214, 205, 205);">
+            <h4 class="card-title" id="content_{{ post.id }}" style="color: aliceblue;">{{ post.content }}</h4>
+            <textarea class="form-control bg-dark" id="textarea_{{ post.id }}" style="display: none; color: white;"></textarea>
+            <div id="warning_{{ post.id }}" style="color: red;"></div>
+            <div id="save_{{ post.id }}" style="display: none">
+                <button class="btn btn-dark" style="background-color: rgb(46, 45, 45);">Save</button>
+            </div>
+            {% if post.poster %}
+            {% if post.poster.profile.alias %}
+            <div style="font-size: smaller;">posted by <a class="card-link" href="{% url 'profile' user_id=post.poster.id %}" style="color: rgb(214, 205, 205);">{{ post.poster.profile.alias }}</a></div>
+            {% else %}
+            <div style="font-size: smaller;">posted by <a class="card-link" href="{% url 'profile' user_id=post.poster.id %}" style="color: rgb(214, 205, 205);">{{ post.poster }}</a></div>
+            {% endif %}
+            {% else %}
+            <div style="font-size: smaller; color: rgb(214, 205, 205)">The User who posted this has left</div>
+            {% endif %}
+            <div style="font-size: smaller;">{{ post.time }}</div>
+            <div style="font-size: smaller;">{{ post.comments_count }} comments</div>
+            <div style="font-size: smaller;" id="likes_{{ post.id }}">liked by {{ post.likes }}</div>
+            {% if user.is_authenticated %}
+            {% if post in liked_posts %}
+            <div>
+                <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post">Unlike</button>
+            </div>
+            {% else %}
+            <div>
+                <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post">Like</button>
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-auto">
+                    <button class="reply-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="reply_button_{{ post.id }}" data-id="{{ post.id }}" data-content="{{ post.content }}" data-module="post">Reply</button>
+                </div>
+                <div class="col-auto">
+                    <button class="static-archive-button btn btn-dark dropdown-toggle" type="button" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="static_archive_button_{{ post.id }}" data-bs-toggle="dropdown" aria-expanded="false">Archive</button>
+                    <ul class="dropdown-menu" id="archives_view_{{ post.id }}" aria-multiselectable="static_archive_button_{{ post.id }}" style="background-color: rgb(37, 36, 36); color: rgb(214, 205, 205)">
+                        {% for archive in archives %}
+                        {% if archive in post.archived_locations %}
+                        <li>
+                            <input class="checkbox_{{ post.id }}" type="checkbox" value="{{ archive.id }}" name="{{ archive.id }}" checked>
+                            <label for="{{ archive.id }}">{{ archive.name }}</label>
+                        </li>
+                        {% else %}
+                        <li>
+                            <input class="checkbox_{{ post.id }}" type="checkbox" value="{{ archive.id }}" name="{{ archive.id }}">
+                            <label for="{{ archive.id }}">{{ archive.name }}</label>    
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        <button class="dynamic-archive-button btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" id="dynamic_archive_button{{ post.id }}" data-id="{{ post.id }}">Save</button>
+                    </ul>          
+                </div>
+            {% if user == post.poster %}
+                <div class="col-auto">
+                    <button class="edit-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="edit_button_{{ post.id }}" data-id="{{ post.id }}" data-module="post">Edit</button>
+                </div>
+                <div class="col-auto">
+                    <button class="delete-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post" data-status="true">Delete</button>
+                </div>    
+            </div>
+            {% endif %}
+        {% endif %}
+            <div class="row">
+                <form action="{% url 'comment' post_id=post.id %}">
+                    <button class="btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" type="submit">View</button>
+                </form>    
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination">
+    {% if posts_per_page.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ posts_per_page.previous_page_number }}" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Previous</a></li>
+    {% endif %}
+    {% if posts_per_page.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ posts_per_page.next_page_number }}" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;">Next</a></li>
+    {% endif %}
+    </ul>
+</nav>

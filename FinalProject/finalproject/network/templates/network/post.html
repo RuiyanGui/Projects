@@ -1,0 +1,303 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+    {% if post.is_reply %}
+    <div class="card" style="max-width: 36rem; background-color: rgb(70, 70, 70);">
+        {% if post.reply_to %}
+        {% if post.reply_to.poster %}
+        {% if post.reply_to.poster.profile.alias %}
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=post.reply_to.poster.id %}">@ {{ post.reply_to.poster.profile.alias }}</a></div>
+        {% else %}
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=post.reply_to.poster.id %}" href="{% url 'profile' user_id=post.reply_to.poster.id %}">@ {{ post.reply_to.poster }}</a></div>
+        {% endif %}
+        {% else %}
+        <div style="color: rgb(214, 205, 205);">The user who posted this has left</div>
+        {% endif %}
+        <div style="color: aliceblue;">Re: {{ post.reply_to.content }}</div>
+        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'comment' post_id=post.reply_to.id %}">see original post</a></div>
+        {% else %}
+        <div style="color: rgb(214, 205, 205);">"The post replied to is deleted."</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+<div class="card form-group" style="max-width: 36rem; background-color: rgb(46, 45, 45);">
+    <div class="card-body" style="color: rgb(214, 205, 205)">
+        <h2 class="card-title" id="content_{{ post.id }}" style="color: aliceblue;">{{ post.content }}</h3>
+        <textarea class="form-control bg-dark" id="textarea_{{ post.id }}" style="display: none; color: white;"></textarea>
+        <div id="warning_{{ post.id }}" style="color: red;"></div>
+        <div id="save_{{ post.id }}" style="display: none">
+            <button class="btn btn-dark" style="background-color: rgb(46, 45, 45);">Save</button>
+        </div>
+        {% if post.poster %}
+        {% if post.poster.profile.alias %}
+        <h6>posted by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=post.poster.id %}">{{ post.poster.profile.alias }}</a></h6>
+        {% else %}
+        <h6>posted by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=post.poster.id %}">{{ post.poster }}</a></h6>
+        {% endif %}
+        {% else %}
+        <h6 style="color: rgb(214, 205, 205);">The User who posted this has left</h6>
+        {% endif %}        
+        <h6>{{ post.time }}</h6>
+        <div id="comments_{{ post.id }}">{{ post.comments_count }} comments</div>
+        <div id="likes_{{ post.id }}">liked by {{ post.likes }}</div>
+        {% if user.is_authenticated %}
+        {% if post in liked_posts %}
+        <div>
+            <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post">Unlike</button>
+        </div>
+        {% else %}
+        <div>
+            <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post">Like</button>
+        </div>
+        {% endif %}
+            <div class="row">
+                <div class="col-auto">
+                    <button class="reply-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="reply_button_{{ post.id }}" data-id="{{ post.id }}" data-content="{{ post.content }}" data-module="post" onclick="reply_item()">Reply</button>
+                </div>
+                <div class="col-auto">
+                    <button class="static-archive-button btn btn-dark dropdown-toggle" type="button" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="static_archive_button_{{ post.id }}" data-bs-toggle="dropdown" aria-expanded="false">Archive</button>
+                    <ul class="dropdown-menu" id="archives_view_{{ post.id }}" aria-multiselectable="static_archive_button_{{ post.id }}" style="background-color: rgb(37, 36, 36); color: rgb(214, 205, 205)">
+                        {% for archive in archives %}
+                        {% if archive in post.archived_locations %}
+                        <li>
+                            <input class="checkbox_{{ post.id }}" type="checkbox" value="{{ archive.id }}" name="{{ archive.id }}" checked>
+                            <label for="{{ archive.id }}">{{ archive.name }}</label>
+                        </li>
+                        {% else %}
+                        <li>
+                            <input class="checkbox_{{ post.id }}" type="checkbox" value="{{ archive.id }}" name="{{ archive.id }}">
+                            <label for="{{ archive.id }}">{{ archive.name }}</label>    
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        <button class="dynamic-archive-button btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" id="dynamic_archive_button{{ post.id }}" data-id="{{ post.id }}">Save</button>
+                    </ul>
+                </div>
+                {% if user == post.poster %}
+                <div class="col-auto">
+                    <button class="edit-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="edit_button_{{ post.id }}" data-id="{{ post.id }}" data-module="post">Edit</button>
+                </div>
+                <div class="col-auto">
+                    <button class="delete-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ post.id }}" data-module="post" data-status="false">Delete</button>
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="container-fluid" style="background-color: rgb(37, 36, 36);">
+    <div class="row">
+        <div class="col-auto">
+            <button id="comments-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#comments-view" aria-expanded="false" aria-controls="comments-view">View Comments</button>
+            <div id="comments-view" class="collapse">
+                {% if user.is_authenticated %}
+                <div>
+                    <button class="comment-form-button btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden; color: rgb(214, 205, 205);" type="button" data-bs-toggle="collapse" data-bs-target="#comment_form_{{ post.id }}" aria-expanded="false" aria-controls="comment_form_{{ post.id }}">Add Comment</button>
+                </div>
+                <div id="comment_form_{{ post.id }}" class="collapse">
+                    <form action="{% url 'comment' post_id=post.id %}" method="post">
+                        {% csrf_token %}
+                        <button class="comment-form-button btn btn-dark" style="color: rgb(214, 205, 205);" type="submit" id="comment_button_{{ post_id }}" onclick="comment_item()">Save</button>
+                        {{ comment_form }}
+                    </form>
+                </div>
+                {% endif %}
+                {% for comment in comments_per_page %}
+                <div id="comment_view_{{ comment.id }}" class="my-2">
+                    {% if comment.is_reply %}
+                    <div class="card" style="max-width: 23rem; background-color: rgb(70, 70, 70);">
+                        {% if comment.reply_to %}
+                        {% if comment.reply_to.commenter %}
+                        {% if comment.reply_to.commenter.profile.alias %}
+                        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=comment.reply_to.commenter.id %}">@ {{ comment.reply_to.commenter.profile.alias }}</a></div>
+                        {% else %}
+                        <div><a class="btn btn-dark" style="color: rgb(214, 205, 205); background-color: rgb(70, 70, 70); border-style: hidden;" href="{% url 'profile' user_id=comment.reply_to.commenter.id %}">@ {{ comment.reply_to.commenter }}</a></div>
+                        {% endif %}
+                        {% else %}
+                        <div style="color: rgb(214, 205, 205);">The user who commented this has left</div>
+                        {% endif %}
+                        <div style="color: rgb(214, 205, 205)">#{{ comment.reply_to.location }}</div>
+                        <div style="color: aliceblue;">Re: {{ comment.reply_to.content }}</div>
+                        {% else %}
+                        <div style="color: rgb(214, 205, 205);">"The comment replied to is deleted"</div>
+                        {% endif %}    
+                    </div>
+                    {% endif %}
+
+                    <di class="card form-group" style="max-width: 23rem; background-color: rgb(46, 45, 45);">
+                        <div class="card-body" style="color: rgb(214, 205, 205);">
+                            <div style="color: rgb(214, 205, 205);">#{{ comment.location }}</div>
+                            <h4 class="card-title" style="color: aliceblue;" id="content_comment_{{ comment.id }}">{{ comment.content }}</h4>
+                            <textarea class="form-control bg-dark" id="textarea_comment_{{ comment.id }}" style="display: none; color: white;"></textarea>
+                            <div id="warning_comment_{{ comment.id }}" style="color: red"></div>
+                            <div id="save_comment_{{ comment.id }}" style="display: none" >
+                                <button class="btn btn-dark" style="background-color: rgb(46, 45, 45);">Save</button>
+                            </div>
+                            {% if comment.commenter %}
+                            {% if comment.commenter.profile.alias %}
+                            <div style="font-size: smaller;">commented by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=comment.commenter.id %}">{{ comment.commenter.profile.alias }}</a></div>
+                            {% else %}
+                            <div style="font-size: smaller;">commented by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=comment.commenter.id %}">{{ comment.commenter }}</a></div>
+                            {% endif %}
+                            {% else %}
+                            <div style="font-size: smaller; color: rgb(214, 205, 205);">The User who commented this has left</div>
+                            {% endif %}
+                            <div style="font-size: smaller;">{{ comment.time }}</div>
+                            <div style="font-size: smaller;" id="likes_comment_{{ comment.id }}">liked by {{ comment.likes }}</div>
+                            {% if user.is_authenticated %}
+                            {% if comment in liked_comments %}
+                            <div>
+                                <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ comment.id }}" data-module="comment">Unlike</button>
+                            </div>
+                            {% else %}
+                            <div>
+                                <button class="like-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ comment.id }}" data-module="comment">Like</button>
+                            </div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="col-auto">
+                                    <button class="reply-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="reply_button_comment_{{ comment.id }}" data-id="{{ comment.id }}" data-post="{{ post.id }}" data-module="comment" data-content="{{ comment.content }}" onclick="comment_item()">Reply</button>
+                                </div>
+                                {% if user == comment.commenter %}
+                                <div class="col-auto">
+                                    <button class="edit-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" id="edit_button_comment_{{ comment.id }}" data-id="{{ comment.id }}" data-module="comment">Edit</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="delete-button btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" data-id="{{ comment.id }}" data-module="comment">Delete</button>
+                                </div>
+                                {% endif %}    
+                            </div>
+                            {% endif %}        
+                        </div>
+                </div>
+                {% endfor %}
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                    {% if comments_per_page.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?comment_page={{ comments_per_page.previous_page_number }}" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" onclick="comment_item()">Previous</a></li>
+                    {% endif %}
+                    {% if comments_per_page.has_next %}
+                    <li class="page-item"><a class="page-link" href="?comment_page={{ comments_per_page.next_page_number }}" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" onclick="comment_item()">Next</a></li>
+                    {% endif %}
+                    </ul>
+                </nav>    
+            </div>        
+        </div>
+        <div class="col-auto">
+            <button id="likers-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#likers-view" aria-expanded="false" aria-controls="likers-view">View Likers</button>
+            <div id="likers-view" class="collapse">
+                {% if user.is_authenticated %}
+                {% if user.profile.alias %}
+                <div id="dynamic-self-show" style="display: none; font-size: smaller; color: rgb(214, 205, 205);"><a href="{% url 'profile' user_id=user.id %}" style="color: rgb(214, 205, 205);">@ {{ user.profile.alias }}</a> liked this post</div>
+                {% else %}
+                <div id="dynamic-self-show" style="display: none; font-size: smaller; color: rgb(214, 205, 205);"><a href="{% url 'profile' user_id=user.id %}" style="color: rgb(214, 205, 205);">@ {{ user }}</a> liked this post</div>
+                {% endif %}
+                {% endif %}
+                {% for liker in likers_per_page %}
+                {% if liker.liker and liker.liker.id == user.id %}
+                {% if liker.liker.profile.alias %}
+                <div id="static-self-show" style="font-size: smaller; color: rgb(214, 205, 205);"><a style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=liker.liker.id %}">@ {{ liker.liker.profile.alias }}</a> liked this post</div>
+                {% else %}
+                <div id="static-self-show" style="font-size: smaller; color: rgb(214, 205, 205);"><a style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=liker.liker.id %}">@ {{ liker.liker }}</a> liked this post</div>
+                {% endif %}
+                {% elif liker.liker %}
+                {% if liker.liker.profile.alias %}
+                <div style="font-size: smaller; color: rgb(214, 205, 205);"><a style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=liker.liker.id %}">@ {{ liker.liker.profile.alias }}</a> liked this post</div>
+                {% else %}
+                <div style="font-size: smaller; color: rgb(214, 205, 205);"><a style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=liker.liker.id %}">@ {{ liker.liker }}</a> liked this post</div>
+                {% endif %}
+                {% else %}
+                <div style="font-size: smaller; color: rgb(214, 205, 205)">The User who has liked this post has left</div>
+                {% endif %}
+                {% endfor %}
+                <nav aria-label="Page navigation example" class="my-2">
+                    <ul class="pagination">
+                    {% if likers_per_page.has_previous %}
+                    <li class="page-item"><a class="page-link" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" href="?liker_page={{ likers_per_page.previous_page_number }}" onclick="liker_item()">Previous</a></li>
+                    {% endif %}
+                    {% if likers_per_page.has_next %}
+                    <li class="page-item"><a class="page-link" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" href="?liker_page={{ likers_per_page.next_page_number }}" onclick="liker_item()">Next</a></li>
+                    {% endif %}
+                    </ul>
+                </nav>    
+            </div>        
+        </div>
+        <div class="col-auto">
+            <button id="replies-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#replies-view" aria-expanded="false" aria-controls="replies-view">View Replies</button>
+            <div id="replies-view" class="collapse">
+                {% for reply in replies_per_page %}
+                <div class="card" style="max-width: 23rem; background-color: rgb(70, 70, 70);">
+                    <h6 class="card-text" style="color: aliceblue;">{{ reply.content }}</h6>
+                    <div style="font-size: smaller; color: rgb(214, 205, 205);">{{ reply.time }}</div>
+                    {% if reply.poster %}
+                    {% if reply.poster.profile.alias %}
+                    <div style="font-size: smaller; color: rgb(214, 205, 205);">Posted by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=reply.poster.id %}">@ {{ reply.poster.profile.alias }}</a></div>
+                    {% else %}
+                    <div style="font-size: smaller; color: rgb(214, 205, 205);">Posted by <a class="card-link" style="color: rgb(214, 205, 205);" href="{% url 'profile' user_id=reply.poster.id %}">@ {{ reply.poster }}</a></div>
+                    {% endif %}
+                    {% else %}
+                    <div style="font-size: smaller; color: rgb(214, 205, 205);">The user who replied has left</div>
+                    {% endif %}
+                    <div class="row">
+                        <form action="{% url 'comment' post_id=reply.id %}">
+                            <button class="btn btn-dark" style="background-color: rgb(46, 45, 45); border-style: hidden;" type="submit">View</button>
+                        </form>    
+                    </div>
+                </div>
+                {% endfor %}
+                <nav aria-label="Page navigation example" class="my-2">
+                    <ul class="pagination">
+                    {% if replies_per_page.has_previous %}
+                    <li class="page-item"><a class="page-link" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" href="?page={{ replies_per_page.previous_page_number }}" onclick="reply_item()">Previous</a></li>
+                    {% endif %}
+                    {% if replies_per_page.has_next %}
+                    <li class="page-item"><a class="page-link" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white;" href="?page={{ replies_per_page.next_page_number }}" onclick="reply_item()">Next</a></li>
+                    {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>        
+    </div>
+</div>
+
+{% block script %}
+<script>
+
+    // Helpers to prevent the paginated item from getting closed each time a page is turned.
+    function comment_item() {
+        localStorage.setItem('comment', 'true');
+    }
+
+
+    function liker_item() {
+        localStorage.setItem('liker', 'true');
+    }
+
+
+    function reply_item() {
+        localStorage.setItem('reply', 'true');
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        if (localStorage.getItem('comment') === 'true') {
+            document.querySelector('#comments-button').click();
+        } else if (localStorage.getItem('liker') === 'true') {
+            document.querySelector('#likers-button').click();
+        } else if (localStorage.getItem('reply') === 'true') {
+            document.querySelector('#replies-button').click();
+        }
+
+        localStorage.setItem('comment', 'false');
+        localStorage.setItem('liker', 'false');
+        localStorage.setItem('reply', 'false');
+
+    })
+
+</script>
+{% endblock %}
+{% endblock %}

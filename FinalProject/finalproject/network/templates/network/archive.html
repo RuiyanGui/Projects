@@ -1,0 +1,32 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+<div class="container-fluid">
+<h1 style="color: white;">{{ archive.name }}</h1>
+<div class="row ">
+    {% if archive.owner.id == user.id %}
+    <div class="col-auto">
+        <button class="delete-button btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" data-id="{{ archive.id }}" data-module="archive" data-status="{{ user.id }}" onclick="archive_item()">Delete</button>
+    </div>
+    <div class="col-auto">
+        <button id="archive_form-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#archive_form" aria-expanded="false" aria-controls="archive_form">Edit</button>
+    </div>
+    <div id="archive_form" class="collapse" style="color: rgb(214, 205, 205);">
+        <form action="{% url 'archive' %}" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="hidden" name="id" value="{{ archive.id }}">
+            <button class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="submit">Save</button>
+        </form>
+    </div>    
+    {% endif %}
+    <div class="col-auto">
+        <a class="btn btn-dark" role="button" style="background-color: rgb(37, 36, 36); border-style: hidden;" href="{% url 'profile' user_id=archive.owner.id %}">Back</a>
+    </div>
+</div>
+</div>
+
+{% include "network/postsview.html" %}
+
+{% endblock %}

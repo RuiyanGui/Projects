@@ -1,0 +1,32 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+  <h1>Edit Your Profile</h1>
+
+
+  <form action="{% url 'edit_profile' %}" method="post">
+    {% csrf_token %}
+    <div class="form-group my-2"><label style="color: white;">Alias: </label>{{ form.alias }}</div>
+    <div class="form-group my-2"><label style="color: white;">Date of Birth (yyyy-mm-dd): </label>{{ form.date_of_birth }}</div>
+    <div class="form-group my-2"><label style="color: white;">Self Introduction: </label>{{ form.self_intro }}</div>
+    <div class="row">
+        <button class="like-button btn btn-dark col-3 mx-1" style="background-color: rgb(46, 45, 45); border-style: hidden;" type="submit">Save your change!</button>
+        <button class="like-button btn btn-dark col-3 mx-1" style="background-color: rgb(46, 45, 45); border-style: hidden;" onclick="gotoprofile(event)" data-id="{{ user.id }}">Go to profile</button>    
+    </div>
+  </form>
+
+{% block script %}
+  <script>
+
+    // Helper to redirect to profile.
+    function gotoprofile(e) {
+        const target = e.target;
+        let id = target.dataset.id;
+        window.location.href = 'profile/' + id;
+    }
+  
+  </script>
+{% endblock %}
+
+{% endblock %}

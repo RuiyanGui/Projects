@@ -1,0 +1,204 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <div class="card" style="max-width: 100vw; background-color: rgb(37, 36, 36); border-style: hidden; color: rgb(214, 205, 205);">
+        {% if profile_owner.profile.alias %}
+        <h1 class="card-title">{{ profile_owner.profile.alias }}</h1>
+        {% else %}
+        <h1 class="card-title">{{ profile_owner.username }}</h1>
+        {% endif %}
+        <div class="card-text" onclick="self_intro_show(event)" data-content="{{ profile_owner.profile.self_intro }}" data-original="{{ profile_owner.profile.self_intro|truncatewords:20 }}">{{ profile_owner.profile.self_intro|truncatewords:20 }}</div>
+        <div>
+            <h4>follow: {{ followeds_count }}</h4>
+        </div>
+        <div>
+            <h4>
+                followed by: {{ followers_count }}
+            </h4>
+        </div>
+        {% if user.is_authenticated %}
+        {% if profile_owner != login_user %}
+        {% if following_status %}
+        <div id="follow-button-view">
+            <form action="{% url 'follow' %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="submit">Unfollow</button>
+                <input type="hidden" name="followed" value="{{ profile_owner }}">
+                <input type="hidden" name="status" value="unfollow">
+            </form>    
+        </div>
+        {% else %}
+        <div id="follow-button-view">
+            <form action="{% url 'follow' %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="submit">Follow</button>
+                <input type="hidden" name="followed" value="{{ profile_owner }}">
+                <input type="hidden" name="status" value="follow">
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-auto">
+                <button id="archive-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#archives-view" aria-expanded="false" aria-controls="archives-view">Show archives</button>
+                <div id="archives-view" class="collapse">
+                    {% for archive in archives_per_page %}
+                    {% if not archive.private %}
+                    <div><a style="background-color: rgb(37, 36, 36); border-style: hidden; color: rgb(214, 205, 205);" href="{% url 'archive_view' archive_id=archive.id %}">{{ archive.name }}</a></div>
+                    {% endif %}
+                    {% endfor %}    
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                        {% if archives_per_page.has_previous %}
+                        <li class="page-item"><a class="page-link" style="background-color: rgb(37, 36, 36); border-style: hidden; color: white;" href="?archive_page={{ archives_per_page.previous_page_number }}" onclick="archive_item()">Previous</a></li>
+                        {% endif %}
+                        {% if archives_per_page.has_next %}
+                        <li class="page-item"><a class="page-link" style="background-color: rgb(37, 36, 36); border-style: hidden; color: white;" href="?archive_page={{ archives_per_page.next_page_number }}" onclick="archive_item()">Next</a></li>
+                        {% endif %}
+                        </ul>
+                    </nav>                        
+                </div>    
+            </div>
+    
+            {% else %}
+            <div class="col-auto">
+                <button id="create_archive_button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#archive-form" aria-expanded="false" aria-controls="archive-form">Create Archive</button>
+                <div id="archive-form" class="collapse">
+                    <form action="{% url 'archive' %}" method="post">
+                        {% csrf_token %}
+                        {{ archive_form }}
+                        <button class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="submit" onclick="archive_item()">Save</button>
+                    </form>
+                </div>    
+            </div>
+    
+            <div class="col-auto">
+                <a class="btn btn-dark" role="button" style="background-color: rgb(37, 36, 36); border-style: hidden; color: white;" href="{% url 'edit_profile' %}">Edit Profile</a>
+            </div>
+    
+            <div class="col-auto">
+                <button id="archive-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#archives-view" aria-expanded="false" aria-controls="archives-view">Show archives</button>
+                <div id="archives-view" class="collapse">
+                    {% for archive in archives_per_page %}
+                    {% if archive.private %}
+                    <div>private: <a href="{% url 'archive_view' archive_id=archive.id %}" style="color: rgb(214, 205, 205);">{{ archive.name }}</a></div>
+                    {% else %}
+                    <div><a href="{% url 'archive_view' archive_id=archive.id %}" style="color: rgb(214, 205, 205);">{{ archive.name }}</a></div>
+                    {% endif %}
+                    {% endfor %}
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                        {% if archives_per_page.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?archive_page={{ archives_per_page.previous_page_number }}" onclick="archive_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Previous</a></li>
+                        {% endif %}
+                        {% if archives_per_page.has_next %}
+                        <li class="page-item"><a class="page-link" href="?archive_page={{ archives_per_page.next_page_number }}" onclick="archive_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Next</a></li>
+                        {% endif %}
+                        </ul>
+                    </nav>                        
+                </div>    
+            </div>
+            {% endif %}
+            {% endif %}
+        
+            <div class="col-auto">
+                <button id="follower-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;"  type="button" data-bs-toggle="collapse" data-bs-target="#followers-view" aria-expanded="false" aria-controls="followers-view">Show followers</button>
+                <div id="followers-view" class="collapse">
+                    {% for follower in followers_per_page %}
+                    {% if follower.follower.profile.alias %}
+                    <div><a href="{% url 'profile' user_id=follower.follower.id %}" style="color: rgb(214, 205, 205);">{{ follower.follower.profile.alias }}</a></div>
+                    {% else %}
+                    <div><a href="{% url 'profile' user_id=follower.follower.id %}" style="color: rgb(214, 205, 205);">{{ follower.follower }}</a></div>
+                    {% endif %}
+                    {% endfor %}
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                        {% if followers_per_page.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?follower_page={{ followers_per_page.previous_page_number }}" onclick="follower_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Previous</a></li>
+                        {% endif %}
+                        {% if followers_per_page.has_next %}
+                        <li class="page-item"><a class="page-link" href="?follower_page={{ followers_per_page.next_page_number }}" onclick="follower_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Next</a></li>
+                        {% endif %}
+                        </ul>
+                    </nav>                        
+                </div>    
+            </div>
+    
+            <div class="col-auto">
+                <button id="followed-button" class="btn btn-dark" style="background-color: rgb(37, 36, 36); border-style: hidden;" type="button" data-bs-toggle="collapse" data-bs-target="#followeds-view" aria-expanded="false" aria-controls="followeds-view">Show who the user follows</button>
+                <div id="followeds-view" class="collapse">
+                    {% for followed in followeds_per_page %}
+                    {% if followed.followed.profile.alias %}
+                    <div><a href="{% url 'profile' user_id=followed.followed.id %}" style="color: rgb(214, 205, 205);">{{ followed.followed.profile.alias }}</a></div>
+                    {% else %}
+                    <div><a href="{% url 'profile' user_id=followed.followed.id %}" style="color: rgb(214, 205, 205);">{{ followed.followed }}</a></div>
+                    {% endif %}
+                    {% endfor %}
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                        {% if followeds_per_page.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?followed_page={{ followeds_per_page.previous_page_number }}" onclick="followed_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Previous</a></li>
+                        {% endif %}
+                        {% if followeds_per_page.has_next %}
+                        <li class="page-item"><a class="page-link" href="?followed_page={{ followeds_per_page.next_page_number }}" onclick="followed_item()" style="background-color: rgb(46, 45, 45); border-style: hidden; color: white">Next</a></li>
+                        {% endif %}
+                        </ul>
+                    </nav>                        
+                </div>    
+            </div>
+        </div>    
+    </div>
+
+    <label>See this user's post</label>
+    <div id="posts-view" class="container-fluid d-grid gap-3" style="padding-left: 50px;">
+        {% include "network/postsview.html" %}
+    </div>
+
+    {% block script %}
+    <script>
+
+        // Helpers to prevent the paginated item from closing each time a page is turned.
+        function archive_item() {
+            localStorage.setItem('archive', 'true');
+        }
+
+        function follower_item() {
+            localStorage.setItem('follower', 'true');
+        }
+
+        function followed_item() {
+            localStorage.setItem('followed', 'true');
+        }
+
+        function self_intro_show(e) {
+            const target = e.target;
+            const content = target.dataset.content;
+            const original = target.dataset.original;
+            if (target.innerHTML !== content) {
+                target.innerHTML = content;
+            } else {
+                target.innerHTML = original;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            if (localStorage.getItem('archive') === 'true') {
+                document.querySelector('#archive-button').click();
+            } else if (localStorage.getItem('follower') === 'true') {
+                document.querySelector('#follower-button').click();
+            } else if (localStorage.getItem('followed') === 'true') {
+                document.querySelector('#followed-button').click();
+            }
+
+            localStorage.setItem('archive', 'false');
+            localStorage.setItem('follower', 'false');
+            localStorage.setItem('followed', 'false');
+
+        })
+
+    </script>
+    {% endblock %}
+{% endblock %}
