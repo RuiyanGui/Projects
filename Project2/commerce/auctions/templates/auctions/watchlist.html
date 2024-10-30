@@ -1,0 +1,30 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Your Watchlist</h2>
+    {% if listings %}
+    <ul>
+        {% for listing in listings %}
+        <li>
+            <a href="{% url 'display' listing.item.id %}">
+                {{ listing.item.title }}
+            </a>
+            <div>
+                <div>
+                    {{ listing.item.description }}
+                </div>
+                <div>
+                    Price: {{ listing.item.starting_bid }}
+                </div>
+                <div>
+                    {% if listing.item.image_url %}
+                    {% load static %}
+                    <img src="{{ listing.item.image_url }}" width="300" height="200">
+                    {% endif %}
+                </div>
+            </div>            
+        </li>
+        {% endfor %}    
+    </ul>
+    {% endif %}
+{% endblock %}

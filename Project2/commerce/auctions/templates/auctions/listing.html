@@ -1,0 +1,76 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+<div>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <div>
+        {{ listing.title }}
+    </div>
+    <div>
+        {{ listing.description }}
+    </div>
+    <div>
+        Price: {{ listing.starting_bid }}
+    </div>
+    <div>
+        Category: {{ listing.category }}
+    </div>
+    <div>
+        {% if listing.image_url %}
+        {% load static %}
+        <img src="{{ listing.image_url }}">
+        {% endif %}
+    </div>
+    {% if listing.user != user %}
+    <div>
+        <form action="{% url 'add_watchlist' listing.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Add/Delete</button>
+        </form>
+    </div>
+    <div>
+        <form action="{% url 'bidding' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <button type="submit">Bid!</button>
+        </form>
+    </div>
+    {% endif %}
+    {% if listing.user == user %}
+    <div>
+        <form action="{% url 'close' listing.id %}" method="get">
+            <button type="submit">Close the listing</button>
+        </form>
+    </div>
+    {% endif %}
+    <div>
+        <form action="{% url 'comment' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit">Add Comment</button>
+        </form>
+    </div>
+    {% if comments %}
+    <div>
+        <ul>
+            {% for comment in comments %}
+            <li>
+                <div>
+                    {{ comment.comment }}
+                </div>
+                <div>
+                    Posted by: {{ comment.user }}
+                </div>
+            </li>
+            {% endfor %}
+        <ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
