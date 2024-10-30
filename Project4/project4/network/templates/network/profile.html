@@ -1,0 +1,39 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <div>
+        <h1>{{ profile_owner.username }}</h1>
+        <div>
+            <h4>follow: {{ followeds.count }}</h4>
+        </div>
+        <div>
+            <h4>
+                followed by: {{ followers.count }}
+            </h4>
+        </div>
+        {% if user.is_authenticated %}
+        {% if profile_owner != login_user %}
+        {% if following_status %}
+        <div>
+            <form action="{% url 'follow' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Unfollow</button>
+                <input type="hidden" name="followed" value="{{ profile_owner }}">
+                <input type="hidden" name="status" value="unfollow">
+            </form>    
+        </div>
+        {% else %}
+        <div>
+            <form action="{% url 'follow' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Follow</button>
+                <input type="hidden" name="followed" value="{{ profile_owner }}">
+                <input type="hidden" name="status" value="follow">
+            </form>    
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+    </div>
+
+{% endblock %}

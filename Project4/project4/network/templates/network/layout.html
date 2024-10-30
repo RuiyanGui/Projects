@@ -1,0 +1,96 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Social Network{% endblock %}</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link href="{% static 'network/styles.css' %}" rel="stylesheet">
+        <script defer src="{% static 'network/script.js' %}"></script>
+    </head>
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="{% url 'index' %}">Network</a>
+          
+            <div>
+              <ul class="navbar-nav mr-auto">
+                {% if user.is_authenticated %}
+                {% if user %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' user_id=user.id %}"><strong>{{ user.username }}</strong></a>
+                    </li>
+                {% endif %}
+                {% endif %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'index' %}">All Posts</a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'following' %}">Following</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Log In</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+              </ul>
+            </div>
+          </nav>
+        
+        <div class="body">
+            {% block body %}
+            {% endblock %}
+
+            <div class="posts-view">
+                {% for post in posts_per_page %}
+                <div id="content_{{ post.id }}">{{ post.content }}</div>
+                <textarea id="textarea_{{ post.id }}" style="display: none"></textarea>
+                <div id="save_{{ post.id }}" style="display: none">
+                    <form action="{% url 'index' %}">
+                        <button type="submit">Save</button>
+                    </form>
+                </div>
+                {% if post.poster %}
+                <div>posted by <a href="{% url 'profile' user_id=post.poster.id %}">{{ post.poster }}</a></div>
+                {% else %}
+                <div>The User who posted this has left</div>
+                {% endif %}
+                <div>{{ post.time }}</div>
+                <div id="likes_{{ post.id }}" data-count="{{ post.likes }}">liked by {{ post.likes }}</div>
+                <div id="click_likes_{{ post.id }}" style="display: none"></div>
+                {% if user.is_authenticated %}
+                {% if user == post.poster %}
+                <div>
+                    <button class="edit-button" data-id="{{ post.id }}">Edit</button>
+                </div>
+                {% else %}
+                {% if post.id in liked_posts %}
+                <button class="like-button" data-id="{{ post.id }}">unlike</button>
+                {% else %}
+                <button class="like-button" data-id="{{ post.id }}">like</button>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+            </div>
+            
+              <nav aria-label="Page navigation example">
+                  <ul class="pagination">
+                  {% if posts_per_page.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts_per_page.previous_page_number }}">Previous</a></li>
+                  {% endif %}
+                  {% if posts_per_page.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ posts_per_page.next_page_number }}">Next</a></li>
+                  {% endif %}
+                  </ul>
+                </nav>            
+        </div>
+    </body>
+</html>
